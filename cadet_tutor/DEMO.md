@@ -7,12 +7,14 @@ presenting.
 
 ## Before you start (not part of the 3 minutes)
 
-1. Make sure both models are installed: `ollama list` shows `qwen2.5:7b` and `bge-m3`.
+1. Make sure both models are installed: `ollama list` shows `qwen2.5:7b` and `bge-m3`,
+   and that Tesseract has Arabic and French: `tesseract --list-langs` shows `ara` and `fra`.
 2. **Turn Wi-Fi off** (and unplug Ethernet). Leave it off for the whole demo.
 3. From the `cadet_tutor` folder: `streamlit run app.py`. The browser opens at
    `http://localhost:8501`.
 4. Click **Demo** in the sidebar. You should see **"Demo loaded."** and
-   "4 chunks indexed". The user is reset to **Cadet**.
+   "6 chunks indexed". The user is reset to **Cadet**. Loading takes a few seconds
+   longer than before because page 2 of the Arabic guide is a scan and is OCR'd.
 
 ## Script
 
@@ -42,7 +44,7 @@ Type:
 What is the H-hour for Exercise Iron Cedar?
 ```
 
-**Expect:** *"I can't find this in the documents available at your clearance level."*
+**Expect:** *"Not covered in the documents available at your clearance level."*
 Open **Sources**: only `geneva_conventions_extracts` and `five_paragraph_order_guide`.
 The confidential exercise order never reached the model.
 
@@ -87,6 +89,24 @@ Tab **Order review**.
 > "Same rubric, same grader: it rewards a complete order and names exactly what's missing."
 
 The **Average** sample should land in between if you have time for a third run.
+
+### Optional: French and Arabic (+1 min)
+Still as **Cadet**, tab **Ask**. Each of these topics exists in only one language,
+so the answer has to come from a document in another language.
+
+```
+Où faut-il placer le garrot en cas d'hémorragie grave ?
+```
+**Expect:** an answer **in French** (5 to 7 cm above the wound, never on a joint),
+quoting the Arabic passage in Arabic, cited as **[guide_secourisme_ar, p.1-2]**.
+
+```
+كم مرة يجب إرسال تقرير الموقف SITREP؟
+```
+**Expect:** an answer **in Arabic, right to left** (every six hours, or immediately on
+a major change), quoting the French passage in French, cited as
+**[manuel_transmissions_fr, p.1-2]**.
+> "Cadets ask in their own language; the tutor searches every language."
 
 ### 2:50 – Close (10 s)
 Point at the Wi-Fi icon.

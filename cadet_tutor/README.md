@@ -59,6 +59,25 @@ test document) and reset the app. Three sample orders (excellent, average, missi
 sections) can be loaded in the **Order review** tab. [DEMO.md](DEMO.md) is a
 3-minute presentation script that works with Wi-Fi off.
 
+## Languages
+
+Documents and questions can be in French, Arabic or English.
+
+- **Extraction:** PyMuPDF reads the text layer. Tesseract OCRs pages that have little or
+  no text (scans, slides saved as pictures) or a corrupted Arabic text layer, in the
+  page's own language, and restores the reading order of columns.
+  `python -m src.ingest` lists every OCR'd page and why.
+- **Indexing:** each chunk stores its language (`fr`, `ar`, `en`). Arabic is normalised
+  for indexing only (alef variants, ى→ي, ة→ه, no diacritics or tatweel); the original
+  text is what is shown and cited.
+- **Cross-lingual search:** `bge-m3` puts all three languages in one vector space, so a
+  French question finds Arabic passages and vice versa.
+- **Answers** are written in the question's language and quote passages in their
+  original language. Arabic is displayed right to left.
+- **Model:** set `LLM_MODEL` in `src/config.py`, or run with
+  `CADET_LLM_MODEL=qwen2.5:14b` (pull it first). The 14b model follows the language
+  and citation rules more reliably but needs about 10 GB of memory.
+
 ## Modes
 
 - **Ask** – grounded Q&A. Every sentence cites `[Document, p.X]`; citations that
@@ -80,8 +99,8 @@ to level 0 with a warning; changing a level re-ingests that file on the next run
 ## Evaluation and tests
 
 ```bash
-python -m scripts.evaluate            # retrieval accuracy + clearance-leak checks
-python -m scripts.evaluate --answers  # also checks generated answers and citations
+python -m scripts.evaluate            # hit rate@5 and clearance leaks, per language
+python -m scripts.evaluate --answers  # also correct refusals, keywords, answer language, latency
 pip install pytest && pytest -q       # offline unit tests (no Ollama needed)
 ```
 

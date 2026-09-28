@@ -13,7 +13,11 @@ COLLECTION_NAME = "doctrine"
 
 # Ollama (local only)
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")
-LLM_MODEL = "qwen2.5:7b"
+# Chat model. Switch here, or without editing: CADET_LLM_MODEL=qwen2.5:14b streamlit run app.py
+# qwen2.5:14b follows the language and citation rules more reliably but needs ~10 GB of
+# RAM/VRAM and is about twice as slow. Pull it first: ollama pull qwen2.5:14b
+LLM_MODEL_OPTIONS = ("qwen2.5:7b", "qwen2.5:14b")
+LLM_MODEL = os.getenv("CADET_LLM_MODEL", "qwen2.5:7b")
 EMBED_MODEL = "bge-m3"
 LLM_TEMPERATURE = 0.1
 LLM_NUM_CTX = 8192

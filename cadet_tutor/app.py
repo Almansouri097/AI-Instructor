@@ -6,10 +6,12 @@ Run from the project root:
 import streamlit as st
 
 from src import config, demo, llm
+from src.ui import BIDI_CSS, show_info, show_text
 from src.ingest import get_collection
 from src.modes import ask, order, quiz
 
 st.set_page_config(page_title="Cadet Tutor", page_icon="🎖️", layout="wide")
+st.markdown(BIDI_CSS, unsafe_allow_html=True)
 
 
 def reset_state(keep: tuple[str, ...] = ()) -> None:
@@ -24,8 +26,8 @@ def show_sources(hits) -> None:
         return
     with st.expander(f"Sources ({len(hits)})"):
         for h in hits:
-            st.markdown(f"**{h.label}** · {config.LEVEL_NAMES.get(h.level, '?')} · similarity {h.score:.2f}")
-            st.caption(h.text[:600] + ("…" if len(h.text) > 600 else ""))
+            st.markdown(f"**{h.label}** · {config.LEVEL_NAMES.get(h.level, '?')} · {h.lang} · similarity {h.score:.2f}")
+            show_text(h.text[:600] + ("…" if len(h.text) > 600 else ""), small=True)
 
 
 # --- sidebar: user and health ---------------------------------------------------
@@ -72,17 +74,17 @@ with tab_ask:
     history = st.session_state.setdefault("history", [])
     for msg in history:
         with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
+            show_text(msg["content"])
     if question := st.chat_input("Ask about doctrine, law of armed conflict, SOPs…"):
         with st.chat_message("user"):
-            st.markdown(question)
+            show_text(question)
         with st.chat_message("assistant"), st.spinner("Searching documents…"):
             try:
                 res = ask.answer(question, level, history)
             except llm.OllamaError as exc:
                 st.error(str(exc))
                 st.stop()
-            st.markdown(res.text)
+            show_text(res.text)
             for w in res.warnings:
                 st.warning(w)
             show_sources(res.sources)
@@ -116,7 +118,8 @@ with tab_quiz:
             st.subheader(f"Score: {quiz.score(qs, picks)}/{len(qs)}")
             for i, (q, p) in enumerate(zip(qs, picks)):
                 icon = "✅" if p == q.answer else "❌"
-                st.markdown(f"{icon} **{i + 1}.** Correct answer: *{q.options[q.answer]}*  \n{q.explanation} {q.source}")
+                st.markdown(f"{icon} **{i + 1}.** {q.source}")
+                show_text(f"**{q.options[q.answer]}**\n{q.explanation}")
 
 # --- Order review ----------------------------------------------------------------------
 with tab_order:
@@ -141,7 +144,7 @@ with tab_order:
         st.metric("Total", f"{result.total}/{result.max_total}")
         for c in result.criteria:
             st.progress(c.score / c.max, text=f"{c.title}: {c.score}/{c.max}")
-            st.caption(c.feedback)
+            show_text(c.feedback, small=True)
         if result.overall:
-            st.info(result.overall)
+            show_info(result.overall)
         show_sources(result.sources)

@@ -29,8 +29,8 @@ def fake_chat(messages: list[dict], json_mode: bool) -> str:
     if json_mode:
         return json.dumps({"questions": []})
     labels = re.findall(r"^\[[^\]]+, p\.\d+(?:-\d+)?\]$", prompt, re.M)
-    if not labels:
-        return "I can't find this in the documents available at your clearance level."
+    if not labels:  # refuse in the language the system prompt asks for
+        return re.search(r'reply exactly:\n"(.+)"', messages[0]["content"]).group(1)
     # Echo the first excerpt so tests can see exactly what the model was given.
     first = prompt.split(labels[0], 1)[1].strip().split("\n\n")[0]
     return f"{first[:300]} {labels[0]}"
