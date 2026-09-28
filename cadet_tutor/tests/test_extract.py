@@ -82,6 +82,32 @@ def test_short_text_page_is_kept_when_ocr_finds_nothing(tmp_path):
     assert page.text == "Thank you" and not page.ocr
 
 
+def _position(text: str, phrase: str) -> int:
+    pos = " ".join(text.split()).find(phrase)
+    assert pos >= 0, f"{phrase!r} not found in OCR text"
+    return pos
+
+
+@needs_tesseract
+def test_qa_rows_keep_each_answer_after_its_question():
+    # Plain Tesseract reads all questions, then all answers.
+    [page] = extract_pages(FIXTURES / "fr_rows_scanned.pdf")
+    order = [_position(page.text, p) for p in
+             ["QUESTIONS DE RÉVISION", "Question un", "Réponse un", "Question deux", "Réponse deux",
+              "Question trois", "Réponse trois"]]
+    assert order == sorted(order)
+    assert "RÉPONSES — QUESTIONS DE RÉVISION" in page.text  # one-line title not split
+
+
+@needs_tesseract
+def test_arabic_columns_read_right_to_left():
+    # Plain Tesseract reads straight across both columns.
+    [page] = extract_pages(FIXTURES / "ar_columns_scanned.pdf")
+    right = _position(page.text, "العمود الأيمن. يجب معاملة أسرى الحرب معاملة إنسانية")
+    left = _position(page.text, "العمود الأيسر. لا يلتزم أسير الحرب")
+    assert right < left
+
+
 def test_missing_tesseract_gives_clear_error(monkeypatch):
     monkeypatch.setattr(config, "TESSERACT_CMD", "/nonexistent/tesseract")
     with pytest.raises(OcrUnavailable, match="Install Tesseract"):

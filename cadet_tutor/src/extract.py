@@ -19,6 +19,9 @@ from src import config
 
 ARABIC_RE = re.compile(r"[؀-ۿ]")
 LATIN_RE = re.compile(r"[A-Za-zÀ-ſ]")
+# OCR "words" with no letters or digits that are not sentence punctuation: box edges,
+# arrows and icon fragments read as text (e.g. "|", "—}", "[").
+JUNK_SYMBOLS_RE = re.compile(r"[^\w?!:;.,،؛؟«»%()\"'’\-–—•]+")
 BIDI_CONTROLS = dict.fromkeys(map(ord, "‎‏‪‫‬‭‮⁦⁧⁨⁩"))
 
 # Forms produced by Arabic fonts whose ligatures extract with letters swapped or dropped
@@ -58,8 +61,13 @@ def repeated_lines(page_texts: list[str]) -> set[str]:
     return {l for l, n in counts.items() if n >= max(3, len(page_texts) / 2)}
 
 
-def _strip_lines(text: str, drop: set[str]) -> str:
-    return "\n".join(l for l in text.splitlines() if _norm_line(l) not in drop).strip()
+def _strip_lines(text: str, drop: set[str], fragments: bool = False) -> str:
+    """Remove header/footer lines. With fragments=True (OCR output, where a header may be
+    split or slightly misread) also remove lines that are a piece of a header line."""
+    def is_header(line: str) -> bool:
+        n = _norm_line(line)
+        return n in drop or (fragments and len(n) >= 8 and any(n in d for d in drop))
+    return "\n".join(l for l in text.splitlines() if not is_header(l)).strip()
 
 
 def arabic_share(text: str) -> float:
@@ -101,20 +109,83 @@ def detect_script(png: bytes, page_no: int) -> str | None:
     return {"Arabic": "ara", "Latin": "fra"}.get(script.group(1)) if script else None
 
 
+@dataclass
+class Word:
+    text: str
+    line: tuple[str, str, str]  # Tesseract (block, paragraph, line)
+    index: int  # position in Tesseract's output (logical order within a line)
+    x0: int
+    y0: int
+    x1: int
+    y1: int
+
+
+def _gaps(words: list[Word], vertical: bool, min_gap: float) -> list[tuple[int, int]]:
+    """Empty bands between words, as (start, end) along x (vertical=True) or y."""
+    spans = sorted((w.x0, w.x1) if vertical else (w.y0, w.y1) for w in words)
+    gaps, reach = [], spans[0][1]
+    for start, end in spans[1:]:
+        if start - reach >= min_gap:
+            gaps.append((reach, start))
+        reach = max(reach, end)
+    return gaps
+
+
+def _median_height(words: list[Word]) -> int:
+    return sorted(w.y1 - w.y0 for w in words)[len(words) // 2]
+
+
+def _xy_cut(words: list[Word], rtl: bool) -> list[list[Word]]:
+    """Recursive XY-cut: split at a full-height gutter into columns (right to left for
+    Arabic), else at wide horizontal gaps into bands (top to bottom). Gap thresholds
+    scale with the region's own text size. Returns regions in reading order."""
+    content = [w for w in words if any(c.isalnum() for c in w.text)]  # symbols don't block gutters
+    if len(content) > 1:
+        height = _median_height(content)
+        columns = _gaps(content, vertical=True, min_gap=config.COLUMN_GAP * height)
+        if columns and len({w.line for w in content}) > 1:  # a single line is never split
+            cut = sum(max(columns, key=lambda g: g[1] - g[0])) / 2
+            parts = [[w for w in words if (w.x0 + w.x1) / 2 < cut], [w for w in words if (w.x0 + w.x1) / 2 >= cut]]
+            if rtl:
+                parts.reverse()
+            return [r for p in parts if p for r in _xy_cut(p, rtl)]
+        bands = _gaps(content, vertical=False, min_gap=config.BAND_GAP * height)
+        if bands:
+            edges = [-1] + [(a + b) / 2 for a, b in bands] + [float("inf")]
+            parts = [[w for w in words if lo <= (w.y0 + w.y1) / 2 < hi] for lo, hi in zip(edges, edges[1:])]
+            return [r for p in parts if p for r in _xy_cut(p, rtl)]
+    return [words]
+
+
+def _region_lines(words: list[Word]) -> list[str]:
+    """Lines of one region: Tesseract's lines, top to bottom, words in logical order."""
+    lines: dict[tuple[str, str, str], list[Word]] = {}
+    for w in words:
+        lines.setdefault(w.line, []).append(w)
+    ordered = sorted(lines.values(), key=lambda ws: min(w.y0 for w in ws))
+    return [" ".join(w.text for w in sorted(ws, key=lambda w: w.index)) for ws in ordered]
+
+
 def ocr_png(png: bytes, lang: str, page_no: int = 0) -> str:
-    """OCR one page image; drop low-confidence words (icons and photos read as text)."""
+    """OCR one page image: drop low-confidence words (icons and photos read as text) and
+    rebuild the reading order so columns are not read straight across."""
     min_conf = min(config.OCR_MIN_WORD_CONF.get(l, 30) for l in lang.split("+"))
     tsv = _tesseract(["-l", lang, "tsv"], png, page_no)
-    lines: dict[tuple[str, str, str], list[str]] = {}
-    for r in csv.DictReader(io.StringIO(tsv), delimiter="\t", quoting=csv.QUOTE_NONE):
-        if r["level"] == "5" and r["text"].strip() and float(r["conf"]) >= min_conf:
-            lines.setdefault((r["block_num"], r["par_num"], r["line_num"]), []).append(r["text"])
+    words = []
+    for i, r in enumerate(csv.DictReader(io.StringIO(tsv), delimiter="\t", quoting=csv.QUOTE_NONE)):
+        text = r["text"].strip()
+        if r["level"] == "5" and text and float(r["conf"]) >= min_conf and not JUNK_SYMBOLS_RE.fullmatch(text):
+            x, y, w, h = (int(r[k]) for k in ("left", "top", "width", "height"))
+            words.append(Word(text, (r["block_num"], r["par_num"], r["line_num"]), i, x, y, x + w, y + h))
+    if not words:
+        return ""
+    regions = _xy_cut(words, rtl=lang == "ara")
     out = []
-    for words in lines.values():
-        line = " ".join(words)
-        if "ara" in lang and "«" not in line:  # Tesseract reads the Arabic comma as »
-            line = line.replace("»", "،")
-        out.append(line)
+    for region in regions:
+        for line in _region_lines(region):
+            if "ara" in lang and "«" not in line:  # Tesseract reads the Arabic comma as »
+                line = line.replace("»", "،")
+            out.append(line)
     return "\n".join(out)
 
 
@@ -148,7 +219,7 @@ def extract_pages(pdf_path: Path) -> list[Page]:
                 reason = "corrupted Arabic text layer"
             if reason:
                 text, lang = _ocr_page(page, layer)
-                ocr_body = _strip_lines(_clean(text), drop)
+                ocr_body = _strip_lines(_clean(text), drop, fragments=True)
                 if len(ocr_body) > len(body) or reason.startswith("corrupted"):
                     body, reason = ocr_body, f"{reason}, OCR {lang}"
                 else:  # OCR found nothing more than the short text layer: keep it

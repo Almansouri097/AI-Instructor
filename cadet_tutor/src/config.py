@@ -27,6 +27,11 @@ OCR_DPI = 300
 # Drop low-confidence OCR words (icons and photos read as text). Arabic scores are
 # unreliable (real words score near 0), so Arabic keeps every word.
 OCR_MIN_WORD_CONF = {"ara": 0, "fra": 40, "eng": 40}
+# Column detection on OCR'd pages, in multiples of the median word height: a vertical
+# gutter at least COLUMN_GAP wide splits columns; a horizontal gap at least BAND_GAP
+# high separates bands (rows, paragraphs, headings).
+COLUMN_GAP = 1.5
+BAND_GAP = 0.8
 BROKEN_ARABIC_THRESHOLD = 0.03  # share of corrupted-ligature words that triggers OCR
 TESSERACT_CMD = os.getenv("TESSERACT_CMD", "tesseract")  # full path to tesseract.exe on Windows
 
