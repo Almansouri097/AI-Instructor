@@ -4,3 +4,4 @@ chroma_db/
 .venv/
 .pytest_cache/
 data/docs/*.pdf
+audit/

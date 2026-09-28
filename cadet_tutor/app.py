@@ -5,7 +5,7 @@ Run from the project root:
 """
 import streamlit as st
 
-from src import config, demo, llm
+from src import audit, config, demo, llm
 from src.ui import BIDI_CSS, show_info, show_text
 from src.ingest import get_collection
 from src.modes import ask, order, quiz
@@ -67,7 +67,9 @@ with st.sidebar:
         st.stop()
     st.caption(f"{chunks} chunks indexed · model `{config.LLM_MODEL}` · fully local")
 
-tab_ask, tab_quiz, tab_order = st.tabs(["Ask", "Quiz", "Order review"])
+AUDIT_LEVEL = config.USERS["Instructor"]
+names = ["Ask", "Quiz", "Order review"] + (["Audit"] if level >= AUDIT_LEVEL else [])
+tab_ask, tab_quiz, tab_order, *tab_audit = st.tabs(names)
 
 # --- Ask ----------------------------------------------------------------------------
 with tab_ask:
@@ -80,7 +82,8 @@ with tab_ask:
             show_text(question)
         with st.chat_message("assistant"), st.spinner("Searching documents…"):
             try:
-                res = ask.answer(question, level, history)
+                with audit.context(user, level, "ask"):
+                    res = ask.answer(question, level, history)
             except llm.OllamaError as exc:
                 st.error(str(exc))
                 st.stop()
@@ -98,7 +101,8 @@ with tab_quiz:
     if c3.button("Generate", use_container_width=True):
         with st.spinner("Writing questions…"):
             try:
-                st.session_state.quiz = quiz.generate(topic, level, int(n))
+                with audit.context(user, level, "quiz"):
+                    st.session_state.quiz = quiz.generate(topic, level, int(n))
             except llm.OllamaError as exc:
                 st.error(str(exc))
         st.session_state.pop("quiz_done", None)
@@ -137,7 +141,8 @@ with tab_order:
     if st.button("Assess order", disabled=not text.strip()):
         with st.spinner("Assessing…"):
             try:
-                result = order.assess(text, level)
+                with audit.context(user, level, "order"):
+                    result = order.assess(text, level)
             except llm.OllamaError as exc:
                 st.error(str(exc))
                 st.stop()
@@ -148,3 +153,23 @@ with tab_order:
         if result.overall:
             show_info(result.overall)
         show_sources(result.sources)
+
+# --- Audit (Instructors only: the tab is not created for other users) --------------
+if tab_audit:
+    with tab_audit[0]:
+        st.caption(f"Every query, from the local audit log `{config.AUDIT_DB.name}` (latest first).")
+        entries = audit.rows()
+        c1, c2, c3 = st.columns(3)
+        who = c1.multiselect("User", sorted({r["user"] for r in entries}))
+        modes = c2.multiselect("Mode", sorted({r["mode"] for r in entries}))
+        flagged_only = c3.checkbox("Only flagged queries")
+        shown = [r for r in entries
+                 if (not who or r["user"] in who) and (not modes or r["mode"] in modes)
+                 and (not flagged_only or r["flags"])]
+        st.metric("Queries", len(shown))
+        st.dataframe(
+            [{"time (UTC)": r["ts"], "user": r["user"], "level": r["level"], "mode": r["mode"],
+              "flags": "; ".join(r["flags"]), "query": r["query"], "documents": ", ".join(r["docs"])}
+             for r in shown],
+            use_container_width=True, hide_index=True,
+        )

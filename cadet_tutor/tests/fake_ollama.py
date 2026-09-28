@@ -28,12 +28,12 @@ def fake_chat(messages: list[dict], json_mode: bool) -> str:
                            "overall": "Fake assessment."})
     if json_mode:
         return json.dumps({"questions": []})
-    labels = re.findall(r"^\[[^\]]+, p\.\d+(?:-\d+)?\]$", prompt, re.M)
-    if not labels:  # refuse in the language the system prompt asks for
+    docs = re.findall(r'<document label="([^"]+)">\n(.*?)\n</document>', prompt, re.S)
+    if not docs:  # refuse in the language the system prompt asks for
         return re.search(r'reply exactly:\n"(.+)"', messages[0]["content"]).group(1)
     # Echo the first excerpt so tests can see exactly what the model was given.
-    first = prompt.split(labels[0], 1)[1].strip().split("\n\n")[0]
-    return f"{first[:300]} {labels[0]}"
+    label, text = docs[0]
+    return f"{text[:300]} {label}"
 
 
 class _Handler(BaseHTTPRequestHandler):

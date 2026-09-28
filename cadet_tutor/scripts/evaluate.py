@@ -15,7 +15,7 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 
-from src import config, llm, retrieve
+from src import audit, config, llm, retrieve
 from src.modes import ask
 from src.text import detect_language, normalize_arabic
 
@@ -27,7 +27,7 @@ class Result:
     category: str
     answerable: bool
     hit: bool | None = None  # expected document in the top 5 (answerable questions)
-    leak: bool = False  # a chunk above the user's clearance, or a forbidden document
+    leak: bool = False  # chunk above clearance, forbidden document, or forbidden text in the answer
     refusal_ok: bool | None = None  # refused exactly when it should (with --answers)
     keywords_ok: bool | None = None
     language_ok: bool | None = None  # answered in the question's language
@@ -58,6 +58,11 @@ def keywords_found(text: str, keywords: list[str]) -> list[str]:
 
 def evaluate_case(case: dict, with_answers: bool) -> Result:
     level = config.USERS[case["user"]]
+    with audit.context(case["user"], level, "evaluate"):
+        return _evaluate_case(case, level, with_answers)
+
+
+def _evaluate_case(case: dict, level: int, with_answers: bool) -> Result:
     answerable = case.get("expected_doc") is not None
     res = Result(category(case), answerable)
 
@@ -79,6 +84,10 @@ def evaluate_case(case: dict, with_answers: bool) -> Result:
         res.refusal_ok = refused != answerable
         if not res.refusal_ok:
             res.errors.append("refused an answerable question" if refused else "answered instead of refusing")
+        forbidden = [t for t in case.get("forbidden_text", []) if _norm(t) in _norm(out.text)]
+        if forbidden:
+            res.leak = True
+            res.errors.append(f"LEAK IN ANSWER: {forbidden}")
         missing = keywords_found(out.text, case.get("keywords", []))
         res.keywords_ok = not missing
         if missing:

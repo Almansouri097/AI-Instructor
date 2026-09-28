@@ -2,7 +2,7 @@
 import re
 from dataclasses import dataclass
 
-from src import config, llm
+from src import audit, config, guard, llm
 from src.ingest import get_collection
 from src.text import normalize_arabic
 
@@ -17,6 +17,7 @@ class Hit:
     level: int
     score: float  # cosine similarity, higher is better
     lang: str = "en"
+    suspicious: bool = False  # text looks like instructions aimed at the AI
 
 
 def level_filter(level: int) -> dict:
@@ -29,29 +30,32 @@ def search(query: str, level: int, k: int = config.TOP_K) -> list[Hit]:
 
     bge-m3 embeds French, Arabic and English in one space, so a question in one
     language finds passages in the others. The query is normalised like the index.
+    Every call is written to the audit log, including ones that return nothing.
     """
-    col = get_collection()
-    if col.count() == 0:
-        return []
-    [vector] = llm.embed([normalize_arabic(query)])
-    res = col.query(
-        query_embeddings=[vector],
-        n_results=k,
-        where=level_filter(level),
-        include=["documents", "metadatas", "distances"],
-    )
     hits = []
-    for text, meta, dist in zip(res["documents"][0], res["metadatas"][0], res["distances"][0]):
-        # Defence in depth: never trust the store filter alone.
-        if int(meta["level"]) > level:
-            continue
-        hits.append(Hit(text, meta["doc"], meta["label"], int(meta["level"]), 1.0 - dist, meta.get("lang", "en")))
+    col = get_collection()
+    if col.count() > 0:
+        [vector] = llm.embed([normalize_arabic(query)])
+        res = col.query(
+            query_embeddings=[vector],
+            n_results=k,
+            where=level_filter(level),
+            include=["documents", "metadatas", "distances"],
+        )
+        for text, meta, dist in zip(res["documents"][0], res["metadatas"][0], res["distances"][0]):
+            # Defence in depth: never trust the store filter alone.
+            if int(meta["level"]) > level:
+                continue
+            hits.append(Hit(text, meta["doc"], meta["label"], int(meta["level"]), 1.0 - dist,
+                            meta.get("lang", "en"), guard.looks_like_injection(text)))
+    flags = [f"possible prompt injection in {h.label}" for h in hits if h.suspicious]
+    audit.record(query, level, hits, flags)
     return hits
 
 
 def format_context(hits: list[Hit]) -> str:
-    """Render hits as labelled excerpts for the prompt."""
-    return "\n\n".join(f"{h.label}\n{h.text}" for h in hits)
+    """Render hits as fenced, labelled excerpts for the prompt (see guard.py)."""
+    return "\n\n".join(guard.fence_document(h.label, h.text) for h in hits)
 
 
 def extract_citations(text: str) -> list[str]:

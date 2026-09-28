@@ -78,6 +78,30 @@ Documents and questions can be in French, Arabic or English.
   `CADET_LLM_MODEL=qwen2.5:14b` (pull it first). The 14b model follows the language
   and citation rules more reliably but needs about 10 GB of memory.
 
+## Security
+
+- **Clearance is enforced before the model.** Retrieval filters by level inside the
+  vector query and re-checks every result, so the model never receives a chunk above
+  the user's clearance. Nothing the model does, or is tricked into doing, can reveal
+  text it never saw. Switching user clears the conversation.
+- **Prompt injection.** Retrieved text and pasted orders are fenced in
+  `<document>` / `<cadet_order>` tags that the text cannot close, and the system
+  prompts say fenced text is data, never instructions (`src/prompts.py`). Passages
+  that look like instructions to the AI (English, French, Arabic) are flagged in the
+  answer and in the audit log. `data/sample_docs/injection_test.pdf` is a Public
+  document carrying such an attack, loaded by the Demo button.
+- **Audit log.** Every query (Ask, Quiz, Order review, evaluation) is recorded in the
+  local SQLite file `audit/audit.sqlite`: UTC time, user, clearance level, mode, query,
+  documents and citations retrieved, and flags. Instructors see it in the **Audit**
+  tab; for other users the tab is not created and the log is not read.
+- **Tests.** `tests/test_security.py` runs Cadet and Officer through every mode with
+  attack queries in three languages and fails if any restricted text reaches the model.
+
+**Limitation:** there is no login. The "Signed in as" selector is trusted, so anyone
+at the keyboard can choose Instructor. Clearance filtering, the Audit tab and the log's
+user names are only as reliable as that choice. Add authentication before letting
+people use the app unsupervised.
+
 ## Modes
 
 - **Ask** – grounded Q&A. Every sentence cites `[Document, p.X]`; citations that

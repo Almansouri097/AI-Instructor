@@ -14,6 +14,9 @@ SAMPLE_DOCS_DIR = config.DATA_DIR / "sample_docs"
 MULTILINGUAL_LEVELS: dict[str, int] = {
     "manuel_transmissions_fr.pdf": 0,
     "guide_secourisme_ar.pdf": 0,
+    # Public document with an embedded prompt-injection attack (en/fr/ar), to show
+    # that it is flagged and cannot unlock restricted content.
+    "injection_test.pdf": 0,
 }
 SAMPLE_ORDERS: dict[str, str] = {
     "Excellent": "excellent.txt",

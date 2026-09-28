@@ -33,7 +33,8 @@ def answer(question: str, level: int, history: list[dict[str, str]] | None = Non
         context=retrieve.format_context(hits), question=question)})
     text = llm.chat(messages).strip()
 
-    warnings = []
+    warnings = [f"{h.label} contains text that looks like instructions to the AI. "
+                "It was treated as reference material only." for h in hits if h.suspicious]
     bad = retrieve.invalid_citations(text, hits)
     if bad:
         warnings.append("Unverified citations (not in retrieved excerpts): " + ", ".join(bad))

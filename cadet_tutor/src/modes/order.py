@@ -3,7 +3,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from src import config, llm, prompts, retrieve
+from src import config, guard, llm, prompts, retrieve
 from src.text import LANGUAGE_NAMES, detect_language
 
 @dataclass
@@ -66,7 +66,7 @@ def assess(order_text: str, level: int) -> Assessment:
         f"- {c['id']} ({c['title']}, max {c['max']}): {c['description']}" for c in rubric
     )
     system = prompts.ORDER_SYSTEM.format(language=LANGUAGE_NAMES[detect_language(order_text)])
-    prompt = prompts.ORDER_USER.format(rubric=rubric_txt, context=retrieve.format_context(hits) or "(none)", order=order_text)
+    prompt = prompts.ORDER_USER.format(rubric=rubric_txt, context=retrieve.format_context(hits) or "(none)", order=guard.sanitize(order_text))
     raw = llm.chat([{"role": "system", "content": system}, {"role": "user", "content": prompt}], json_mode=True)
     criteria, overall = _parse(raw, rubric)
     return Assessment(criteria, overall, hits)

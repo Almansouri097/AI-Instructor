@@ -9,6 +9,7 @@ LEVELS_CSV = DATA_DIR / "levels.csv"
 RUBRIC_PATH = DATA_DIR / "order_rubric.json"
 EVAL_PATH = DATA_DIR / "eval_questions.json"
 CHROMA_DIR = ROOT / "chroma_db"
+AUDIT_DB = ROOT / "audit" / "audit.sqlite"  # local audit log (gitignored)
 COLLECTION_NAME = "doctrine"
 
 # Ollama (local only)
