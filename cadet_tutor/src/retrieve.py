@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from src import config, llm
 from src.ingest import get_collection
+from src.text import normalize_arabic
 
 CITATION_RE = re.compile(r"\[([^\[\],]+), p\.(\d+)(?:-(\d+))?\]")
 
@@ -15,6 +16,7 @@ class Hit:
     label: str
     level: int
     score: float  # cosine similarity, higher is better
+    lang: str = "en"
 
 
 def level_filter(level: int) -> dict:
@@ -23,11 +25,15 @@ def level_filter(level: int) -> dict:
 
 
 def search(query: str, level: int, k: int = config.TOP_K) -> list[Hit]:
-    """Return the top-k chunks the user is cleared to see."""
+    """Return the top-k chunks the user is cleared to see, in any language.
+
+    bge-m3 embeds French, Arabic and English in one space, so a question in one
+    language finds passages in the others. The query is normalised like the index.
+    """
     col = get_collection()
     if col.count() == 0:
         return []
-    [vector] = llm.embed([query])
+    [vector] = llm.embed([normalize_arabic(query)])
     res = col.query(
         query_embeddings=[vector],
         n_results=k,
@@ -39,7 +45,7 @@ def search(query: str, level: int, k: int = config.TOP_K) -> list[Hit]:
         # Defence in depth: never trust the store filter alone.
         if int(meta["level"]) > level:
             continue
-        hits.append(Hit(text, meta["doc"], meta["label"], int(meta["level"]), 1.0 - dist))
+        hits.append(Hit(text, meta["doc"], meta["label"], int(meta["level"]), 1.0 - dist, meta.get("lang", "en")))
     return hits
 
 

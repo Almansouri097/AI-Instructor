@@ -1,58 +1,53 @@
 [
-  {
-    "question": "What are the five paragraphs of an operation order?",
-    "user": "Cadet",
-    "expected_doc": "five_paragraph_order_guide.pdf",
-    "keywords": ["situation", "mission", "execution", "command"]
-  },
-  {
-    "question": "Which five elements must a mission statement answer?",
-    "user": "Cadet",
-    "expected_doc": "five_paragraph_order_guide.pdf",
-    "keywords": ["who", "what", "when", "where", "why"]
-  },
-  {
-    "question": "How must wounded and sick enemy combatants be treated?",
-    "user": "Cadet",
-    "expected_doc": "geneva_conventions_extracts.pdf",
-    "keywords": ["respected", "protected"]
-  },
-  {
-    "question": "What information is a prisoner of war required to give when questioned?",
-    "user": "Cadet",
-    "expected_doc": "geneva_conventions_extracts.pdf",
-    "keywords": ["name", "rank", "date of birth", "number"]
-  },
-  {
-    "question": "What is the platoon's standard challenge-and-reply procedure at night?",
-    "user": "Officer",
-    "expected_doc": "platoon_sop_restricted.pdf",
-    "keywords": ["challenge"]
-  },
-  {
-    "question": "What are the platoon's minimum ammunition holdings before a patrol?",
-    "user": "Officer",
-    "expected_doc": "platoon_sop_restricted.pdf",
-    "keywords": ["magazines"]
-  },
-  {
-    "question": "What is the H-hour for Exercise Iron Cedar?",
-    "user": "Instructor",
-    "expected_doc": "exercise_iron_cedar_opord.pdf",
-    "keywords": ["0530"]
-  },
-  {
-    "question": "What is the H-hour for Exercise Iron Cedar?",
-    "user": "Cadet",
-    "expected_doc": null,
-    "forbidden_docs": ["exercise_iron_cedar_opord.pdf", "platoon_sop_restricted.pdf"],
-    "keywords": []
-  },
-  {
-    "question": "What is the platoon's standard challenge-and-reply procedure at night?",
-    "user": "Cadet",
-    "expected_doc": null,
-    "forbidden_docs": ["platoon_sop_restricted.pdf", "exercise_iron_cedar_opord.pdf"],
-    "keywords": []
-  }
+  {"question": "What are the five paragraphs of an operation order?", "user": "Cadet", "lang": "en", "doc_lang": "en",
+   "expected_doc": "five_paragraph_order_guide.pdf", "keywords": ["situation", "mission", "execution", "command"]},
+  {"question": "Which five elements must a mission statement answer?", "user": "Cadet", "lang": "en", "doc_lang": "en",
+   "expected_doc": "five_paragraph_order_guide.pdf", "keywords": ["who", "what", "when", "where", "why"]},
+  {"question": "How must wounded and sick enemy combatants be treated?", "user": "Cadet", "lang": "en", "doc_lang": "en",
+   "expected_doc": "geneva_conventions_extracts.pdf", "keywords": ["respected", "protected"]},
+  {"question": "What information is a prisoner of war required to give when questioned?", "user": "Cadet", "lang": "en", "doc_lang": "en",
+   "expected_doc": "geneva_conventions_extracts.pdf", "keywords": ["name", "rank", "date of birth", "number"]},
+  {"question": "What is the platoon's standard challenge-and-reply procedure at night?", "user": "Officer", "lang": "en", "doc_lang": "en",
+   "expected_doc": "platoon_sop_restricted.pdf", "keywords": ["challenge"]},
+  {"question": "What are the platoon's minimum ammunition holdings before a patrol?", "user": "Officer", "lang": "en", "doc_lang": "en",
+   "expected_doc": "platoon_sop_restricted.pdf", "keywords": ["magazines"]},
+  {"question": "What is the H-hour for Exercise Iron Cedar?", "user": "Instructor", "lang": "en", "doc_lang": "en",
+   "expected_doc": "exercise_iron_cedar_opord.pdf", "keywords": ["0530"]},
+  {"question": "What is the H-hour for Exercise Iron Cedar?", "user": "Cadet", "lang": "en", "doc_lang": null,
+   "expected_doc": null, "forbidden_docs": ["exercise_iron_cedar_opord.pdf", "platoon_sop_restricted.pdf"], "keywords": []},
+  {"question": "What is the platoon's standard challenge-and-reply procedure at night?", "user": "Cadet", "lang": "en", "doc_lang": null,
+   "expected_doc": null, "forbidden_docs": ["platoon_sop_restricted.pdf", "exercise_iron_cedar_opord.pdf"], "keywords": []},
+
+  {"question": "À quelle fréquence le SITREP doit-il être transmis ?", "user": "Cadet", "lang": "fr", "doc_lang": "fr",
+   "expected_doc": "manuel_transmissions_fr.pdf", "keywords": ["six heures|6 heures|6 h"]},
+  {"question": "Quel message peut rompre le silence radio ?", "user": "Cadet", "lang": "fr", "doc_lang": "fr",
+   "expected_doc": "manuel_transmissions_fr.pdf", "keywords": ["FLASH"]},
+  {"question": "Quelle est l'heure H de l'exercice Iron Cedar ?", "user": "Cadet", "lang": "fr", "doc_lang": null,
+   "expected_doc": null, "forbidden_docs": ["exercise_iron_cedar_opord.pdf", "platoon_sop_restricted.pdf"], "keywords": []},
+
+  {"question": "أين توضع العاصبة عند حدوث نزيف شديد؟", "user": "Cadet", "lang": "ar", "doc_lang": "ar",
+   "expected_doc": "guide_secourisme_ar.pdf", "keywords": ["فوق الجرح"]},
+  {"question": "ما هي الساعة الذهبية في إخلاء المصابين؟", "user": "Cadet", "lang": "ar", "doc_lang": "ar",
+   "expected_doc": "guide_secourisme_ar.pdf", "keywords": ["ساعة واحدة|ساعه واحده"]},
+  {"question": "ما هو ترتيب الأولويات عند علاج المصاب؟", "user": "Cadet", "lang": "ar", "doc_lang": "ar",
+   "expected_doc": "guide_secourisme_ar.pdf", "keywords": ["النزيف", "التنفس"]},
+  {"question": "ما هو توقيت ساعة الصفر في تمرين آيرون سيدار؟", "user": "Cadet", "lang": "ar", "doc_lang": null,
+   "expected_doc": null, "forbidden_docs": ["exercise_iron_cedar_opord.pdf", "platoon_sop_restricted.pdf"], "keywords": []},
+
+  {"question": "Où faut-il placer le garrot en cas d'hémorragie grave ?", "user": "Cadet", "lang": "fr", "doc_lang": "ar",
+   "expected_doc": "guide_secourisme_ar.pdf", "keywords": ["7|sept"]},
+  {"question": "Combien de lignes compte une demande d'évacuation médicale ?", "user": "Cadet", "lang": "fr", "doc_lang": "ar",
+   "expected_doc": "guide_secourisme_ar.pdf", "keywords": ["9|neuf"]},
+  {"question": "كم مرة يجب إرسال تقرير الموقف SITREP؟", "user": "Cadet", "lang": "ar", "doc_lang": "fr",
+   "expected_doc": "manuel_transmissions_fr.pdf", "keywords": ["ست|6"]},
+  {"question": "ما هي الرسالة التي يمكنها كسر الصمت اللاسلكي؟", "user": "Cadet", "lang": "ar", "doc_lang": "fr",
+   "expected_doc": "manuel_transmissions_fr.pdf", "keywords": ["FLASH|فلاش"]},
+  {"question": "ما هي المعلومات التي يجب على أسير الحرب الإدلاء بها عند استجوابه؟", "user": "Cadet", "lang": "ar", "doc_lang": "en",
+   "expected_doc": "geneva_conventions_extracts.pdf", "keywords": ["اسم", "رتب"]},
+  {"question": "What is the golden hour in casualty evacuation?", "user": "Cadet", "lang": "en", "doc_lang": "ar",
+   "expected_doc": "guide_secourisme_ar.pdf", "keywords": ["one hour|1 hour|an hour|within an hour"]},
+  {"question": "How often must a SITREP be sent?", "user": "Cadet", "lang": "en", "doc_lang": "fr",
+   "expected_doc": "manuel_transmissions_fr.pdf", "keywords": ["six hours|6 hours"]},
+  {"question": "Quelle est l'heure H de l'exercice Iron Cedar ?", "user": "Instructor", "lang": "fr", "doc_lang": "en",
+   "expected_doc": "exercise_iron_cedar_opord.pdf", "keywords": ["0530|05h30|5h30|5 h 30|05:30"]}
 ]

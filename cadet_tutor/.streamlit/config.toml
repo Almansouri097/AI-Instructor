@@ -1,0 +1,6 @@
+# Keep the app fully local: no usage statistics, and only reachable from this machine.
+[browser]
+gatherUsageStats = false
+
+[server]
+address = "localhost"

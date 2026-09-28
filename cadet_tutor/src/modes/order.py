@@ -3,15 +3,8 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from src import config, llm, retrieve
-
-SYSTEM = """You are a military instructor grading a cadet's five-paragraph order.
-Grade each rubric criterion strictly from what the cadet actually wrote.
-Use the doctrine excerpts (if any) to justify feedback and cite their labels exactly.
-Return JSON: {"criteria": [{"id": str, "score": int, "feedback": str}],
-"overall": str (3-5 sentences: strengths, main gaps, one priority to fix)}.
-Each score must be an integer between 0 and that criterion's max."""
-
+from src import config, llm, prompts, retrieve
+from src.text import LANGUAGE_NAMES, detect_language
 
 @dataclass
 class CriterionResult:
@@ -68,15 +61,12 @@ def _parse(raw: str, rubric: list[dict]) -> tuple[list[CriterionResult], str]:
 def assess(order_text: str, level: int) -> Assessment:
     """Grade an order; doctrine retrieval respects the cadet's clearance."""
     rubric = load_rubric()
-    hits = retrieve.search("five paragraph order situation mission execution sustainment command signal", level)
+    hits = retrieve.search(prompts.ORDER_DOCTRINE_QUERY, level)
     rubric_txt = "\n".join(
         f"- {c['id']} ({c['title']}, max {c['max']}): {c['description']}" for c in rubric
     )
-    prompt = (
-        f"Rubric:\n{rubric_txt}\n\n"
-        f"Doctrine excerpts:\n{retrieve.format_context(hits) or '(none)'}\n\n"
-        f"Cadet's order:\n\"\"\"\n{order_text}\n\"\"\""
-    )
-    raw = llm.chat([{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt}], json_mode=True)
+    system = prompts.ORDER_SYSTEM.format(language=LANGUAGE_NAMES[detect_language(order_text)])
+    prompt = prompts.ORDER_USER.format(rubric=rubric_txt, context=retrieve.format_context(hits) or "(none)", order=order_text)
+    raw = llm.chat([{"role": "system", "content": system}, {"role": "user", "content": prompt}], json_mode=True)
     criteria, overall = _parse(raw, rubric)
     return Assessment(criteria, overall, hits)
