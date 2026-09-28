@@ -22,8 +22,12 @@ EMBED_BATCH = 16
 
 # Text extraction: pages with fewer characters than this are OCR'd with Tesseract.
 OCR_MIN_CHARS = 50
-OCR_LANGUAGES = "ara+fra"
+OCR_LANGUAGES = "ara+fra"  # used only when a page's script can't be detected
 OCR_DPI = 300
+# Drop low-confidence OCR words (icons and photos read as text). Arabic scores are
+# unreliable (real words score near 0), so Arabic keeps every word.
+OCR_MIN_WORD_CONF = {"ara": 0, "fra": 40, "eng": 40}
+BROKEN_ARABIC_THRESHOLD = 0.03  # share of corrupted-ligature words that triggers OCR
 TESSERACT_CMD = os.getenv("TESSERACT_CMD", "tesseract")  # full path to tesseract.exe on Windows
 
 # Chunking

@@ -42,8 +42,11 @@ def main() -> None:
         text = "\n".join(p.text for p in pages)
         print(f"{pdf.name}: {len(pages)} pages with text, {len(text)} characters, {script_mix(text)}")
         print(f"OCR'd pages: {ocr_pages or 'none'}")
+        for p in pages:
+            if p.ocr:
+                print(f"  page {p.number}: {p.reason}")
         for p in pages[: args.pages]:
-            print(f"\n--- page {p.number} ({'OCR' if p.ocr else 'text layer'}) ---")
+            print(f"\n--- page {p.number} ({p.reason if p.ocr else 'text layer'}) ---")
             print(p.text[: args.chars])
 
 
