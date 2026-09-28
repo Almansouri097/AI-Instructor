@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+chroma_db/
+.venv/
+.pytest_cache/
+data/docs/*.pdf

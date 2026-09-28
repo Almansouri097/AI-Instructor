@@ -1,0 +1,58 @@
+[
+  {
+    "question": "What are the five paragraphs of an operation order?",
+    "user": "Cadet",
+    "expected_doc": "five_paragraph_order_guide.pdf",
+    "keywords": ["situation", "mission", "execution", "command"]
+  },
+  {
+    "question": "Which five elements must a mission statement answer?",
+    "user": "Cadet",
+    "expected_doc": "five_paragraph_order_guide.pdf",
+    "keywords": ["who", "what", "when", "where", "why"]
+  },
+  {
+    "question": "How must wounded and sick enemy combatants be treated?",
+    "user": "Cadet",
+    "expected_doc": "geneva_conventions_extracts.pdf",
+    "keywords": ["respected", "protected"]
+  },
+  {
+    "question": "What information is a prisoner of war required to give when questioned?",
+    "user": "Cadet",
+    "expected_doc": "geneva_conventions_extracts.pdf",
+    "keywords": ["name", "rank", "date of birth", "number"]
+  },
+  {
+    "question": "What is the platoon's standard challenge-and-reply procedure at night?",
+    "user": "Officer",
+    "expected_doc": "platoon_sop_restricted.pdf",
+    "keywords": ["challenge"]
+  },
+  {
+    "question": "What are the platoon's minimum ammunition holdings before a patrol?",
+    "user": "Officer",
+    "expected_doc": "platoon_sop_restricted.pdf",
+    "keywords": ["magazines"]
+  },
+  {
+    "question": "What is the H-hour for Exercise Iron Cedar?",
+    "user": "Instructor",
+    "expected_doc": "exercise_iron_cedar_opord.pdf",
+    "keywords": ["0530"]
+  },
+  {
+    "question": "What is the H-hour for Exercise Iron Cedar?",
+    "user": "Cadet",
+    "expected_doc": null,
+    "forbidden_docs": ["exercise_iron_cedar_opord.pdf", "platoon_sop_restricted.pdf"],
+    "keywords": []
+  },
+  {
+    "question": "What is the platoon's standard challenge-and-reply procedure at night?",
+    "user": "Cadet",
+    "expected_doc": null,
+    "forbidden_docs": ["platoon_sop_restricted.pdf", "exercise_iron_cedar_opord.pdf"],
+    "keywords": []
+  }
+]

@@ -1,0 +1,41 @@
+{
+  "name": "Five-paragraph order (OPORD) - cadet level",
+  "criteria": [
+    {
+      "id": "situation",
+      "title": "1. Situation",
+      "max": 20,
+      "description": "Covers enemy forces (composition, disposition, likely course of action), friendly forces (higher unit mission, adjacent units), attachments/detachments, and relevant terrain and weather."
+    },
+    {
+      "id": "mission",
+      "title": "2. Mission",
+      "max": 20,
+      "description": "A single clear sentence stating who, what, when, where and why (the 5 Ws), using a doctrinal task verb and a stated purpose."
+    },
+    {
+      "id": "execution",
+      "title": "3. Execution",
+      "max": 25,
+      "description": "Commander's intent, concept of operations (scheme of manoeuvre and fires), tasks to each subordinate element, and coordinating instructions (timings, control measures, rules of engagement)."
+    },
+    {
+      "id": "sustainment",
+      "title": "4. Service Support / Sustainment",
+      "max": 15,
+      "description": "Supply (rations, water, ammunition), transport, medical evacuation plan and casualty collection, handling of detainees."
+    },
+    {
+      "id": "command_signal",
+      "title": "5. Command and Signal",
+      "max": 10,
+      "description": "Location of the commander, succession of command, frequencies/call signs, passwords or challenge-and-reply, and signals for key events."
+    },
+    {
+      "id": "clarity",
+      "title": "Clarity and format",
+      "max": 10,
+      "description": "Follows the five-paragraph sequence, is concise and unambiguous, and uses consistent times and grid references."
+    }
+  ]
+}
