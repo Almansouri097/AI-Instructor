@@ -3,16 +3,8 @@ import json
 import random
 from dataclasses import dataclass
 
-from src import llm, retrieve
-
-SYSTEM = """You write multiple-choice questions for officer cadets.
-Use ONLY facts stated in the excerpts. Return JSON of the form:
-{"questions": [{"question": str, "options": [str, str, str, str],
-"answer": int (0-3, index of the correct option), "explanation": str,
-"source": str (the exact citation label of the excerpt used)}]}
-Exactly one option must be correct. Distractors must be plausible but clearly wrong
-according to the excerpts."""
-
+from src import llm, prompts, retrieve
+from src.text import LANGUAGE_NAMES, detect_language
 
 @dataclass
 class Question:
@@ -46,13 +38,14 @@ def _parse(raw: str, allowed_labels: set[str]) -> list[Question]:
 
 
 def generate(topic: str, level: int, n: int = 5) -> list[Question]:
-    """Generate up to n questions on a topic from cleared excerpts."""
+    """Generate up to n questions on a topic from cleared excerpts, in the topic's language."""
     hits = retrieve.search(topic or "key rules and procedures", level, k=max(n, 5))
     if not hits:
         return []
     random.shuffle(hits)
-    prompt = f"Excerpts:\n{retrieve.format_context(hits)}\n\nWrite {n} questions on: {topic or 'the excerpts'}"
-    raw = llm.chat([{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt}], json_mode=True)
+    system = prompts.QUIZ_SYSTEM.format(language=LANGUAGE_NAMES[detect_language(topic)])
+    prompt = prompts.QUIZ_USER.format(context=retrieve.format_context(hits), n=n, topic=topic or "the excerpts")
+    raw = llm.chat([{"role": "system", "content": system}, {"role": "user", "content": prompt}], json_mode=True)
     return _parse(raw, {h.label for h in hits})[:n]
 
 

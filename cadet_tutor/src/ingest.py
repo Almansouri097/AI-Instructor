@@ -1,4 +1,4 @@
-"""CLI: parse PDFs in data/docs, chunk, embed with Ollama and store in ChromaDB.
+"""CLI: extract PDFs in data/docs (OCR where needed), chunk, embed with Ollama, store in ChromaDB.
 
 Usage (from the project root):
     python -m src.ingest            # incremental: only new/changed documents
@@ -12,9 +12,13 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import chromadb
-from pypdf import PdfReader
+from chromadb.config import Settings
 
-from src import config, llm
+from src import config, extract, llm
+from src.text import detect_language, normalize_arabic
+
+# Bump when extraction or chunk metadata changes, so every document is re-ingested.
+PIPELINE_VERSION = "2-multilingual"
 
 
 @dataclass
@@ -22,11 +26,14 @@ class Chunk:
     text: str
     page_start: int
     page_end: int
+    ocr: bool = False  # any of its pages came from OCR
 
 
 def get_collection(reset: bool = False) -> chromadb.Collection:
     """Open (or create) the persistent Chroma collection."""
-    client = chromadb.PersistentClient(path=str(config.CHROMA_DIR))
+    client = chromadb.PersistentClient(
+        path=str(config.CHROMA_DIR), settings=Settings(anonymized_telemetry=False)
+    )
     if reset:
         try:
             client.delete_collection(config.COLLECTION_NAME)
@@ -37,8 +44,9 @@ def get_collection(reset: bool = False) -> chromadb.Collection:
     )
 
 
-def load_levels(path: Path = config.LEVELS_CSV) -> dict[str, int]:
+def load_levels(path: Path | None = None) -> dict[str, int]:
     """Read filename -> clearance level from levels.csv (missing file = all public)."""
+    path = path or config.LEVELS_CSV
     if not path.exists():
         return {}
     levels: dict[str, int] = {}
@@ -54,19 +62,8 @@ def load_levels(path: Path = config.LEVELS_CSV) -> dict[str, int]:
     return levels
 
 
-def extract_pages(pdf_path: Path) -> list[tuple[int, str]]:
-    """Return (1-based page number, text) for every page that has text."""
-    reader = PdfReader(str(pdf_path))
-    pages = []
-    for i, page in enumerate(reader.pages, start=1):
-        text = (page.extract_text() or "").strip()
-        if text:
-            pages.append((i, text))
-    return pages
-
-
 def chunk_pages(
-    pages: list[tuple[int, str]],
+    pages: list[extract.Page],
     size: int = config.CHUNK_WORDS,
     overlap: int = config.CHUNK_OVERLAP,
 ) -> list[Chunk]:
@@ -75,16 +72,17 @@ def chunk_pages(
     Every word keeps its page number, so a chunk that crosses a page break
     records the exact page range it covers (page_start..page_end).
     """
-    words: list[tuple[str, int]] = [(w, num) for num, text in pages for w in text.split()]
+    words = [(w, p.number) for p in pages for w in p.text.split()]
+    ocr_pages = {p.number for p in pages if p.ocr}
     if not words:
         return []
     step = max(1, size - overlap)
     chunks = []
     for start in range(0, len(words), step):
         window = words[start : start + size]
-        chunks.append(
-            Chunk(" ".join(w for w, _ in window), window[0][1], window[-1][1])
-        )
+        first, last = window[0][1], window[-1][1]
+        ocr = any(first <= n <= last for n in ocr_pages)
+        chunks.append(Chunk(" ".join(w for w, _ in window), first, last, ocr))
         if start + size >= len(words):
             break
     return chunks
@@ -99,7 +97,7 @@ def page_label(doc: str, page_start: int, page_end: int) -> str:
 def fingerprint(pdf_path: Path, level: int) -> str:
     """Hash of file content + level + chunk settings; changes trigger re-ingestion."""
     h = hashlib.sha256(pdf_path.read_bytes())
-    h.update(f"|{level}|{config.CHUNK_WORDS}|{config.CHUNK_OVERLAP}|{config.EMBED_MODEL}".encode())
+    h.update(f"|{level}|{config.CHUNK_WORDS}|{config.CHUNK_OVERLAP}|{config.EMBED_MODEL}|{PIPELINE_VERSION}".encode())
     return h.hexdigest()[:16]
 
 
@@ -116,11 +114,14 @@ def ingest_file(col: chromadb.Collection, pdf_path: Path, level: int) -> str:
     if stored_fingerprint(col, doc) == fp:
         return f"= {doc}: unchanged, skipped"
 
-    chunks = chunk_pages(extract_pages(pdf_path))
+    pages = extract.extract_pages(pdf_path)
+    chunks = chunk_pages(pages)
     if not chunks:
-        return f"! {doc}: no extractable text (scanned PDF?), skipped"
+        return f"! {doc}: no text found, even with OCR, skipped"
 
-    embeddings = llm.embed([c.text for c in chunks])
+    langs = [detect_language(c.text) for c in chunks]
+    # Index normalised Arabic; store, show and cite the original text.
+    embeddings = llm.embed([normalize_arabic(c.text) for c in chunks])
     col.delete(where={"doc": doc})  # drop stale chunks from an older version
     col.add(
         ids=[f"{doc}::{i}" for i in range(len(chunks))],
@@ -134,12 +135,19 @@ def ingest_file(col: chromadb.Collection, pdf_path: Path, level: int) -> str:
                 "page_end": c.page_end,
                 "level": level,
                 "label": page_label(doc, c.page_start, c.page_end),
+                "lang": lang,
+                "ocr": c.ocr,
                 "fingerprint": fp,
             }
-            for c in chunks
+            for c, lang in zip(chunks, langs)
         ],
     )
-    return f"+ {doc}: {len(chunks)} chunks, level {level} ({config.LEVEL_NAMES.get(level, '?')})"
+    mix = ", ".join(f"{lang} {langs.count(lang)}" for lang in sorted(set(langs)))
+    status = f"+ {doc}: {len(chunks)} chunks ({mix}), level {level} ({config.LEVEL_NAMES.get(level, '?')})"
+    for p in pages:
+        if p.ocr:
+            status += f"\n    OCR p.{p.number}: {p.reason}"
+    return status
 
 
 def remove_missing(col: chromadb.Collection, present: set[str]) -> list[str]:

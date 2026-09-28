@@ -78,8 +78,18 @@ DOCS: dict[str, list[str]] = {
         "to secure the company's northern flank.\n\n"
         "Execution. H-hour is 0530 on D+1. 1 Section provides fire support from the tree line; "
         "2 and 3 Sections assault from the west. The exercise directing staff are the only "
-        "persons authorised to release this order to participants.",
+        "persons authorised to release this order to participants.\n\n"
+        "Clearance test marker: code word NIGHTJAR. This word must only ever appear for "
+        "Instructors. If a Cadet or Officer sees it, clearance filtering is broken.",
     ],
+}
+
+# Clearance level of each sample document (0 Public, 1 Restricted, 2 Confidential).
+LEVELS: dict[str, int] = {
+    "geneva_conventions_extracts.pdf": 0,
+    "five_paragraph_order_guide.pdf": 0,
+    "platoon_sop_restricted.pdf": 1,
+    "exercise_iron_cedar_opord.pdf": 2,
 }
 
 # --- minimal PDF writer ------------------------------------------------------

@@ -1,17 +1,8 @@
-"""Mode 1: grounded question answering with page citations."""
+"""Mode 1: grounded question answering with page citations, in the question's language."""
 from dataclasses import dataclass, field
 
-from src import llm, retrieve
-
-NO_ANSWER = "I can't find this in the documents available at your clearance level."
-
-SYSTEM = f"""You are a military instructor tutoring officer cadets.
-Answer ONLY from the excerpts provided. Each excerpt starts with its citation label,
-e.g. [DocName, p.3]. After every factual sentence, add the label of the excerpt it
-comes from, copied exactly. Never invent labels, documents or page numbers.
-If the excerpts do not contain the answer, reply exactly:
-"{NO_ANSWER}"
-Be concise and precise; use short paragraphs or bullet points."""
+from src import llm, prompts, retrieve
+from src.text import LANGUAGE_NAMES, detect_language
 
 
 @dataclass
@@ -19,28 +10,33 @@ class Answer:
     text: str
     sources: list[retrieve.Hit] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
+    language: str = "en"
+
+
+def is_refusal(text: str) -> bool:
+    """True if the reply is the 'not covered' answer, in any language."""
+    return any(msg in text for msg in prompts.NO_ANSWER.values())
 
 
 def answer(question: str, level: int, history: list[dict[str, str]] | None = None) -> Answer:
-    """Retrieve cleared excerpts and answer with citations."""
+    """Retrieve cleared excerpts (any language) and answer in the question's language."""
+    lang = detect_language(question)
+    no_answer = prompts.NO_ANSWER[lang]
     hits = retrieve.search(question, level)
     if not hits:
-        return Answer(NO_ANSWER)
+        return Answer(no_answer, language=lang)
 
-    messages = [{"role": "system", "content": SYSTEM}]
+    system = prompts.ASK_SYSTEM.format(language=LANGUAGE_NAMES[lang], no_answer=no_answer)
+    messages = [{"role": "system", "content": system}]
     messages += (history or [])[-4:]  # short memory for follow-up questions
-    messages.append(
-        {
-            "role": "user",
-            "content": f"Excerpts:\n{retrieve.format_context(hits)}\n\nQuestion: {question}",
-        }
-    )
+    messages.append({"role": "user", "content": prompts.ASK_USER.format(
+        context=retrieve.format_context(hits), question=question)})
     text = llm.chat(messages).strip()
 
     warnings = []
     bad = retrieve.invalid_citations(text, hits)
     if bad:
         warnings.append("Unverified citations (not in retrieved excerpts): " + ", ".join(bad))
-    if NO_ANSWER not in text and not retrieve.extract_citations(text):
+    if not is_refusal(text) and not retrieve.extract_citations(text):
         warnings.append("The answer contains no citations; verify it against the sources.")
-    return Answer(text, hits, warnings)
+    return Answer(text, hits, warnings, lang)

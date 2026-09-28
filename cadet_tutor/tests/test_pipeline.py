@@ -5,7 +5,7 @@ import json
 import pytest
 
 from scripts import make_sample_docs
-from src import config, ingest, llm, retrieve
+from src import config, extract, ingest, llm, retrieve
 from src.modes import order, quiz
 
 
@@ -35,10 +35,11 @@ def store(tmp_path, monkeypatch):
 
 
 def test_chunk_pages_tracks_page_ranges():
-    pages = [(1, "a " * 300), (2, "b " * 300)]
+    pages = [extract.Page(1, "a " * 300, False), extract.Page(2, "b " * 300, True)]
     chunks = ingest.chunk_pages(pages, size=400, overlap=50)
     assert chunks[0].page_start == 1 and chunks[0].page_end == 2
     assert chunks[-1].page_end == 2
+    assert chunks[0].ocr  # covers the OCR'd page 2
     assert all(len(c.text.split()) <= 400 for c in chunks)
 
 
@@ -49,10 +50,10 @@ def test_page_label():
 
 def test_sample_pdfs_are_readable(tmp_path):
     path = tmp_path / "t.pdf"
-    make_sample_docs.write_pdf(path, ["Hello (world)", "Second page"])
-    pages = ingest.extract_pages(path)
-    assert [p for p, _ in pages] == [1, 2]
-    assert "Hello (world)" in pages[0][1]
+    make_sample_docs.write_pdf(path, ["Hello (world) " * 5, "Second page " * 5])
+    pages = extract.extract_pages(path)
+    assert [p.number for p in pages] == [1, 2]
+    assert "Hello (world)" in pages[0].text
 
 
 def test_ingest_is_incremental(store, capsys):
