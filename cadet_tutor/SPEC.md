@@ -122,3 +122,16 @@ Phase 11: Progress tracking
 - Instructor dashboard: weakest topics across all cadets, score trends, most-asked questions.
 - "Generate quiz" button: 5 multiple-choice questions from a chosen document, graded with citations.
 - Export a graded order as a PDF feedback report.
+
+Phase 12: Multilingual documents (French and Arabic) 
+Priority: built next, before phases 9-11, because most course documents are in French or Arabic.
+## Multilingual documents
+- Replace pypdf with PyMuPDF for text extraction. Detect pages with little or no text and run offline OCR with Tesseract (ara+fra). Log which pages were OCR'd.
+- Detect the language of each chunk (fr, ar, en) and store it in metadata.
+- Add an Arabic normalization function (unify alef variants, ى→ي, ة→ه, remove diacritics and tatweel) used only for indexing and BM25. Keep the original text for display and citations.
+- Make BM25 tokenization work correctly for Arabic and French.
+- Support cross-lingual retrieval: a French question must find Arabic chunks and vice versa. Answer in the language of the question, but quote cited passages in their original language.
+- In Streamlit, display Arabic text right-to-left (dir="rtl", right-aligned) in answers, sources, and the grader.
+- Make the model name configurable in config.py so I can switch between qwen2.5:7b and qwen2.5:14b.
+- Extend eval_questions.json with French, Arabic, and cross-lingual questions, and report scores per language.
+- Before all this, run the extraction on one Arabic PDF and one French PDF from data/docs and show me a sample of the extracted text so I can check it.

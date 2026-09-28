@@ -21,21 +21,36 @@ below their own level:
 ollama pull qwen2.5:7b
 ollama pull bge-m3
 
-# 2. Python environment (from this folder)
+# 2. Tesseract OCR with Arabic and French (for scanned pages)
+#    Ubuntu/Debian: sudo apt install tesseract-ocr tesseract-ocr-ara tesseract-ocr-fra
+#    macOS:         brew install tesseract tesseract-lang
+#    Windows:       install from https://github.com/UB-Mannheim/tesseract/wiki, tick
+#                   Arabic and French, then set TESSERACT_CMD to the full path of tesseract.exe
+tesseract --list-langs   # must list ara and fra
+
+# 3. Python environment (from this folder)
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# 3. Documents: put PDFs in data/docs and list them in data/levels.csv
+# 4. Documents: put PDFs in data/docs and list them in data/levels.csv
 #    (or generate the fictional sample set)
 python -m scripts.make_sample_docs
 
-# 4. Index them
+# 5. Check extraction (see below), then index
+python -m scripts.extract_sample
 python -m src.ingest            # incremental: only new/changed files
 python -m src.ingest --reset    # full rebuild
 
-# 5. Launch
+# 6. Launch
 streamlit run app.py
 ```
+
+## Checking text extraction
+
+`python -m scripts.extract_sample` prints, for every PDF in `data/docs` (or the files
+you name), the page count, which pages were OCR'd, the Arabic/Latin letter mix, and
+a text sample per page. Run it on new documents before ingesting them: broken words,
+reversed Arabic lines or garbled OCR show up here first.
 
 ## Demo
 

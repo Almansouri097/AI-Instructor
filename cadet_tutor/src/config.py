@@ -20,6 +20,12 @@ LLM_NUM_CTX = 8192
 LLM_RETRIES = 2  # extra attempts after the first failure
 EMBED_BATCH = 16
 
+# Text extraction: pages with fewer characters than this are OCR'd with Tesseract.
+OCR_MIN_CHARS = 50
+OCR_LANGUAGES = "ara+fra"
+OCR_DPI = 300
+TESSERACT_CMD = os.getenv("TESSERACT_CMD", "tesseract")  # full path to tesseract.exe on Windows
+
 # Chunking
 CHUNK_WORDS = 500
 CHUNK_OVERLAP = 80

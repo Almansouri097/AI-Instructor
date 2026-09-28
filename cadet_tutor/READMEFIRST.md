@@ -15,7 +15,7 @@ Do not add, swap or remove any of these:
 | LLM           | Ollama `qwen2.5:7b` (`format="json"` for structured output) |
 | Embeddings    | Ollama `bge-m3`                         |
 | Vector store  | ChromaDB, persistent local folder       |
-| PDF parsing   | pypdf                                   |
+| PDF parsing   | PyMuPDF, with Tesseract OCR (ara+fra) for scanned pages (phase 12; was pypdf) |
 | UI            | Streamlit                               |
 | Language      | Python 3.11, minimal dependencies in `requirements.txt` |
 
@@ -38,8 +38,15 @@ Work through the phases in order, and verify each one before starting the next:
 11. Progress tracking: per-cadet results in SQLite, Instructor dashboard, quiz from
     a chosen document, PDF feedback report for graded orders.
 
-Phases 8-11 are specified at the end of [SPEC.md](SPEC.md). The packages they name
-(`rank_bm25`, the `bge-reranker-v2-m3` reranker, SQLite) are approved additions to the stack.
+12. Multilingual documents (French and Arabic): PyMuPDF extraction with Tesseract OCR
+    fallback, per-chunk language, Arabic normalisation for indexing, cross-lingual
+    retrieval, right-to-left display, configurable model, per-language evaluation.
+    **Built next, before phases 9-11**, starting with an extraction check on real
+    French and Arabic documents.
+
+Phases 8-12 are specified at the end of [SPEC.md](SPEC.md). The packages they name
+(`rank_bm25`, the `bge-reranker-v2-m3` reranker, SQLite, and for phase 12 PyMuPDF
+replacing pypdf plus Tesseract OCR with Arabic and French) are approved changes to the stack.
 
 ## 4. Wait for confirmation after each phase
 At the end of every phase, report:
