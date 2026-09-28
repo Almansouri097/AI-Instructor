@@ -29,6 +29,17 @@ Work through the phases in order, and verify each one before starting the next:
 5. Order grader.
 6. UI.
 7. Evaluation.
+8. Demo mode: sample orders, a level-2 test document, a Demo button, `DEMO.md`,
+   verified with networking off.
+9. Security: SQLite audit log with an Instructor-only Audit tab, prompt-injection
+   defence, tests proving a Cadet never receives level-1 or level-2 chunks in any mode.
+10. Retrieval upgrades: BM25 + vector hybrid search with reciprocal rank fusion,
+    cross-encoder reranking (top 20 to best 5), streamed responses.
+11. Progress tracking: per-cadet results in SQLite, Instructor dashboard, quiz from
+    a chosen document, PDF feedback report for graded orders.
+
+Phases 8-11 are specified at the end of [SPEC.md](SPEC.md). The packages they name
+(`rank_bm25`, the `bge-reranker-v2-m3` reranker, SQLite) are approved additions to the stack.
 
 ## 4. Wait for confirmation after each phase
 At the end of every phase, report:

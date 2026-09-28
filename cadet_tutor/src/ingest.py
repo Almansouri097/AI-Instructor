@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import chromadb
+from chromadb.config import Settings
 from pypdf import PdfReader
 
 from src import config, llm
@@ -26,7 +27,9 @@ class Chunk:
 
 def get_collection(reset: bool = False) -> chromadb.Collection:
     """Open (or create) the persistent Chroma collection."""
-    client = chromadb.PersistentClient(path=str(config.CHROMA_DIR))
+    client = chromadb.PersistentClient(
+        path=str(config.CHROMA_DIR), settings=Settings(anonymized_telemetry=False)
+    )
     if reset:
         try:
             client.delete_collection(config.COLLECTION_NAME)
@@ -37,8 +40,9 @@ def get_collection(reset: bool = False) -> chromadb.Collection:
     )
 
 
-def load_levels(path: Path = config.LEVELS_CSV) -> dict[str, int]:
+def load_levels(path: Path | None = None) -> dict[str, int]:
     """Read filename -> clearance level from levels.csv (missing file = all public)."""
+    path = path or config.LEVELS_CSV
     if not path.exists():
         return {}
     levels: dict[str, int] = {}

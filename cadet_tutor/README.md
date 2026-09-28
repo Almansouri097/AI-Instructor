@@ -37,6 +37,13 @@ python -m src.ingest --reset    # full rebuild
 streamlit run app.py
 ```
 
+## Demo
+
+Click **Demo** in the sidebar to load the sample documents (including a level-2
+test document) and reset the app. Three sample orders (excellent, average, missing
+sections) can be loaded in the **Order review** tab. [DEMO.md](DEMO.md) is a
+3-minute presentation script that works with Wi-Fi off.
+
 ## Modes
 
 - **Ask** – grounded Q&A. Every sentence cites `[Document, p.X]`; citations that

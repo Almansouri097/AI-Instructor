@@ -1,0 +1,29 @@
+OPERATION ORDER 03 - EXERCISE GRANITE FORD (TRAINING)
+Time zone: local. Map: Granite Valley 1:50 000.
+
+1. SITUATION
+a. Enemy forces. An enemy engineer section of about 8 soldiers with one light machine gun is preparing the road bridge at GR 3312 5540 for demolition. They are dug in on the east bank and have been seen laying wire since 1600 yesterday. Most likely course of action: defend the bridge until relieved, then fire the charges and withdraw east along Route BLUE. Most dangerous: fire the charges as soon as they detect us.
+b. Friendly forces. Higher: B Company seizes the crossing site in order to allow the battalion to cross the river by 1200 today. Left: 1st Platoon screens the ford at GR 3290 5561. Right: 3rd Platoon is company reserve at the farm at GR 3350 5502.
+c. Attachments and detachments. Attached: one engineer search team (4) from 0400. Detached: none.
+d. Terrain and weather. Open fields to the west bank, a hedge line 300 m from the bridge gives cover to the assault. River is 20 m wide, not fordable at the bridge. Sunrise 0612; light rain until 0800, visibility 1 km.
+
+2. MISSION
+2nd Platoon seizes the road bridge at GR 3312 5540 by 0630 today in order to prevent its demolition and allow B Company to cross.
+
+3. EXECUTION
+a. Commander's intent. Purpose: keep the bridge intact for the battalion crossing. Key tasks: suppress the enemy on the east bank, clear the bridge of charges, hold the far bank. End state: bridge intact and free of charges, platoon holding a bridgehead on the east bank, enemy destroyed or withdrawn.
+b. Concept of operations. A two-phase operation. Phase 1: 1 Section occupies a fire-support position on the hedge line and suppresses the east bank. Phase 2: 2 Section assaults across the bridge and clears the east-bank trenches; 3 Section follows, secures the far bank and escorts the engineer team to clear the charges. Mortars on call for smoke on target AB1001.
+c. Tasks. 1 Section: fire support from hedge line, H-hour minus 5 minutes, lift on green flare. 2 Section: assault across bridge, clear trenches, report "BRIDGE CLEAR". 3 Section: secure east bank, protect engineers, then platoon depth.
+d. Coordinating instructions. H-hour 0600. Line of departure: track at GR 3280 5530. Order of march 1, platoon HQ, 2, 3. Rules of engagement: card A, no fire west of the river after 0615. Rehearsals at 0400 at the assembly area. Report lines: PHASE LINE RED (hedge line), PHASE LINE BLUE (east bank).
+
+4. SERVICE SUPPORT
+a. Supply. Each soldier: 6 magazines, 2 grenades, 2 litres of water, 24 h rations. Section commanders confirm at 0415.
+b. Transport. Platoon vehicles remain at the assembly area; resupply by company quad on request.
+c. Medical. Casualty collection point at the hedge line GR 3301 5536. Evacuation by company ambulance from the CCP to the company aid post at the farm.
+d. Detainees. Searched, tagged and escorted by 3 Section to the company collection point at the farm; treated in accordance with the Third Geneva Convention.
+
+5. COMMAND AND SIGNAL
+a. Command. Platoon commander with 2 Section for the assault; platoon sergeant at the fire-support position. Succession: platoon sergeant, then 1 Section commander.
+b. Signal. Platoon net 45.500, alternate 47.250. Call signs: platoon HQ 21, sections 21A, 21B, 21C. Password: challenge STONE, reply RIVER. Green flare: lift fire. Red flare: withdraw to the hedge line. Radio silence until H-hour.
+
+Acknowledge.
